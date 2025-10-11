@@ -32,13 +32,17 @@ class VerifyEmailView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         token = request.data.get('token')
         if not token or not token.startswith('verify-'):
-            return Response({'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST
+            )
         from django.utils.http import base36_to_int
         try:
             user_id = base36_to_int(token.split('-', 1)[1])
             user = User.objects.get(id=user_id)
         except Exception:
-            return Response({'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST
+            )
         user.is_active = True
         user.save()
         return Response({'detail': 'Account verified'}, status=status.HTTP_200_OK)
@@ -50,15 +54,26 @@ class PasswordResetRequestView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         email = request.data.get('email')
         if not email:
-            return Response({'detail': 'Email required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': 'Email required'}, status=status.HTTP_400_BAD_REQUEST
+            )
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             # don't reveal presence of email in production; here we return 200
-            return Response({'detail': 'If an account exists, a reset token was generated'}, status=status.HTTP_200_OK)
+            return Response(
+                {'detail': 'If an account exists, a reset token was generated'},
+                status=status.HTTP_200_OK,
+            )
+
         # generate a simple reset token and return it (dev-friendly)
-        token = f"reset-{user.id}-{str(RefreshToken.for_user(user).access_token)}"
-        return Response({'detail': 'Reset token generated', 'token': token}, status=status.HTTP_200_OK)
+        token = (
+            f"reset-{user.id}-{str(RefreshToken.for_user(user).access_token)}"
+        )
+        return Response(
+            {'detail': 'Reset token generated', 'token': token},
+            status=status.HTTP_200_OK,
+        )
 
 
 class PasswordResetConfirmView(generics.GenericAPIView):
@@ -68,17 +83,26 @@ class PasswordResetConfirmView(generics.GenericAPIView):
         token = request.data.get('token')
         password = request.data.get('password')
         if not token or not password:
-            return Response({'detail': 'Token and password required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': 'Token and password required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if not token.startswith('reset-'):
-            return Response({'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST
+            )
         parts = token.split('-')
         if len(parts) < 3:
-            return Response({'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST
+            )
         try:
             user_id = int(parts[1])
             user = User.objects.get(id=user_id)
         except Exception:
-            return Response({'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST
+            )
         user.set_password(password)
         user.save()
         return Response({'detail': 'Password updated'}, status=status.HTTP_200_OK)

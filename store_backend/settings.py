@@ -63,14 +63,16 @@ DATABASES = {
 }
 
 # Allow configuring the database via DATABASE_URL for production (Heroku)
+# dj_database_url may be missing in dev/test; annotate to satisfy type checkers
 try:
-    import dj_database_url
+    import dj_database_url  # type: ignore
 except Exception:
-    dj_database_url = None
+    dj_database_url = None  # type: ignore
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL and dj_database_url:
-    DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+    # dj_database_url.parse returns a mapping used by Django; mypy cannot infer its exact type here
+    DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600)  # type: ignore
 
 AUTH_PASSWORD_VALIDATORS = [
     {

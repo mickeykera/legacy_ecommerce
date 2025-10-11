@@ -12,7 +12,12 @@ class Product(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    category = models.ForeignKey(Category, related_name='products', on_delete=models.SET_NULL, null=True)
+    category = models.ForeignKey(
+        Category,
+        related_name='products',
+        on_delete=models.SET_NULL,
+        null=True,
+    )
     stock_quantity = models.PositiveIntegerField(default=0)
     image_url = models.URLField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

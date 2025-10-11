@@ -10,11 +10,28 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
-    category_id = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), source='category', write_only=True, required=False)
+    category_id = (
+        serializers.PrimaryKeyRelatedField(
+            queryset=Category.objects.all(),
+            source='category',
+            write_only=True,
+            required=False,
+        )
+    )
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'category', 'category_id', 'stock_quantity', 'image_url', 'created_at']
+        fields = [
+            'id',
+            'name',
+            'description',
+            'price',
+            'category',
+            'category_id',
+            'stock_quantity',
+            'image_url',
+            'created_at',
+        ]
 
     def validate(self, data):
         # Handle full and partial updates correctly. On partial updates, only

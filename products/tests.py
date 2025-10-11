@@ -11,14 +11,16 @@ class ProductAPITest(TestCase):
         self.client = APIClient()
         self.user = User.objects.create_user(username='tester', password='pass')
         self.cat = Category.objects.create(name='Electronics')
-        self.product = Product.objects.create(
-            name='Phone',
-            description='Smartphone',
-            price=199.99,
-            category=self.cat,
-            stock_quantity=10,
-            image_url='http://example.com/image.jpg'
-        )
+            self.product = Product.objects.create(
+                name='Phone',
+                description='Smartphone',
+                price=199.99,
+                category=self.cat,
+                stock_quantity=10,
+                image_url=(
+                    'http://example.com/image.jpg'
+                ),
+            )
 
     def test_list_products(self):
         resp = self.client.get(reverse('product-list-create'))
@@ -72,7 +74,9 @@ class ProductAPITest(TestCase):
         self.assertTrue(any('Phone' in p['name'] for p in resp.data['results']))
 
         # price range filter
-        resp = self.client.get(reverse('product-list-create') + f'?price__gte=10&price__lte=200')
+            resp = self.client.get(
+                reverse('product-list-create') + '?price__gte=10&price__lte=200'
+            )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         for p in resp.data['results']:
             self.assertGreaterEqual(float(p['price']), 10.0)
@@ -81,7 +85,9 @@ class ProductAPITest(TestCase):
     def test_pagination(self):
         # create many products to trigger pagination
         for i in range(15):
-            Product.objects.create(name=f'Bulk{i}', price=1+i, category=self.cat, stock_quantity=1)
+              Product.objects.create(
+                 name=f'Bulk{i}', price=1 + i, category=self.cat, stock_quantity=1
+              )
         resp = self.client.get(reverse('product-list-create'))
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         # default page size is 10 (set in settings)
