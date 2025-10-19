@@ -2,6 +2,7 @@ from rest_framework import generics, filters, permissions
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Product, Category
 from .serializers import ProductSerializer, CategorySerializer
+from django.conf import settings
 
 
 class ProductListCreateView(generics.ListCreateAPIView):
@@ -19,6 +20,14 @@ class ProductListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         # Only authenticated users can create; enforced by permission_classes
         serializer.save()
+
+    def get_permissions(self):
+        # In local development allow anonymous POST so the UI create button works
+        # without setting up auth. In production (DEBUG=False) the normal
+        # permission_classes apply.
+        if self.request and self.request.method == 'POST' and settings.DEBUG:
+            return [permissions.AllowAny()]
+        return [p() for p in self.permission_classes]
 
 
 class ProductRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
