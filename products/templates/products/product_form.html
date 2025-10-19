@@ -84,15 +84,44 @@
       if (res.status === 201){
         const json = await res.json()
         resultEl.style.display = 'block'
-        resultEl.textContent = 'Created product: ' + json.name + ' (id=' + json.id + ')'
+        // Render a small HTML summary
+        resultEl.innerHTML = `
+          <strong>Created product:</strong>
+          <div>Name: ${escapeHtml(json.name)}</div>
+          <div>Price: ${escapeHtml(json.price)}</div>
+          <div>Stock: ${escapeHtml(json.stock_quantity)}</div>
+          <div>Category: ${json.category ? escapeHtml(json.category.name) : '—'}</div>
+          <div>Created at: ${escapeHtml(json.created_at)}</div>
+        `
+        // Clear the form for convenience
+        form.reset()
       } else {
-        const txt = await res.text()
+        // Try to show JSON errors in a readable way
+        let bodyText = ''
+        try {
+          const errJson = await res.json()
+          bodyText = '<pre>' + escapeHtml(JSON.stringify(errJson, null, 2)) + '</pre>'
+        } catch (e){
+          bodyText = escapeHtml(await res.text())
+        }
         resultEl.style.display = 'block'
-        resultEl.textContent = 'Error ' + res.status + ': ' + txt
+        resultEl.innerHTML = `<strong>Error ${res.status}:</strong> ${bodyText}`
       }
     })
 
     loadCategories().catch(err=>console.error(err))
+  </script>
+  <script>
+    // small helper to avoid inserting raw HTML that could contain user content
+    function escapeHtml(str){
+      if (str === null || str === undefined) return ''
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+    }
   </script>
 </body>
 </html>
