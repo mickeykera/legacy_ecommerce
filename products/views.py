@@ -3,6 +3,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import Product, Category
 from .serializers import ProductSerializer, CategorySerializer
 from django.conf import settings
+from django.shortcuts import render
 
 
 class ProductListCreateView(generics.ListCreateAPIView):
@@ -46,3 +47,9 @@ class CategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+
+def product_page(request):
+    # Simple HTML form page that posts to the API. Template loads categories
+    # from the API via JS. Keep this view minimal.
+    return render(request, 'products/product_form.html')

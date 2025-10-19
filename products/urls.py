@@ -4,6 +4,7 @@ from .views import (
     ProductRetrieveUpdateDestroyView,
     CategoryListCreateView,
     CategoryRetrieveUpdateDestroyView,
+    product_page,
 )
 
 urlpatterns = [
@@ -23,4 +24,6 @@ urlpatterns = [
         CategoryRetrieveUpdateDestroyView.as_view(),
         name='category-detail',
     ),
+    # HTML product form page for local development
+    path('page/', product_page, name='product-page'),
 ]

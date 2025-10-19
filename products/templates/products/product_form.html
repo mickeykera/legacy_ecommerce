@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Create Product</title>
+  <style>
+    body { font-family: sans-serif; max-width: 720px; margin: 2rem auto; }
+    label { display:block; margin-top: .5rem }
+    input, textarea, select { width:100%; padding:.5rem; margin-top:.25rem }
+    button { margin-top:1rem; padding:.5rem 1rem }
+    .notice { margin-top:1rem; padding:.5rem; border:1px solid #ccc }
+  </style>
+</head>
+<body>
+  <h1>Create Product</h1>
+  <form id="product-form">
+    <label>Name
+      <input type="text" name="name" required>
+    </label>
+    <label>Description
+      <textarea name="description"></textarea>
+    </label>
+    <label>Price
+      <input type="number" name="price" step="0.01" required>
+    </label>
+    <label>Stock quantity
+      <input type="number" name="stock_quantity" required>
+    </label>
+    <label>Category
+      <select name="category_id" id="category-select">
+        <option value="">-- choose --</option>
+      </select>
+    </label>
+    <label>Image URL
+      <input type="url" name="image_url">
+    </label>
+    <button type="submit">Create</button>
+  </form>
+
+  <div id="result" class="notice" style="display:none"></div>
+
+  <script>
+    async function loadCategories(){
+      const res = await fetch('/api/products/categories/')
+      const data = await res.json()
+      const sel = document.getElementById('category-select')
+      data.forEach(c => {
+        const opt = document.createElement('option')
+        opt.value = c.id
+        opt.textContent = c.name
+        sel.appendChild(opt)
+      })
+    }
+
+    document.getElementById('product-form').addEventListener('submit', async (e)=>{
+      e.preventDefault()
+      const form = e.target
+      const data = new FormData(form)
+      const body = {}
+      for (const [k,v] of data.entries()){
+        if (v === '') continue
+        if (k === 'price') body[k] = parseFloat(v)
+        else if (k === 'stock_quantity') body[k] = parseInt(v,10)
+        else body[k] = v
+      }
+
+      const res = await fetch('/api/products/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+
+      const resultEl = document.getElementById('result')
+      if (res.status === 201){
+        const json = await res.json()
+        resultEl.style.display = 'block'
+        resultEl.textContent = 'Created product: ' + json.name + ' (id=' + json.id + ')'
+      } else {
+        const txt = await res.text()
+        resultEl.style.display = 'block'
+        resultEl.textContent = 'Error ' + res.status + ': ' + txt
+      }
+    })
+
+    loadCategories().catch(err=>console.error(err))
+  </script>
+</body>
+</html>
