@@ -13,6 +13,19 @@
 </head>
 <body>
   <h1>Create Product</h1>
+  <section id="login-box" style="border:1px solid #eee;padding:1rem;margin-bottom:1rem">
+    <h2>Login (optional)</h2>
+    <form id="login-form">
+      <label>Username
+        <input type="text" name="username">
+      </label>
+      <label>Password
+        <input type="password" name="password">
+      </label>
+      <button type="submit">Get Token</button>
+      <div id="login-result" style="margin-top:.5rem;color:#c33"></div>
+    </form>
+  </section>
   <form id="product-form">
     <label>Name
       <input type="text" name="name" required>
@@ -42,6 +55,11 @@
 
   <div id="result" class="notice" style="display:none"></div>
 
+  <section id="recent" style="margin-top:1.5rem">
+    <h2>Recent products</h2>
+    <div id="recent-list">Loading…</div>
+  </section>
+
   <script>
     async function loadCategories(){
       const res = await fetch('/api/products/categories/')
@@ -67,6 +85,18 @@
         else body[k] = v
       }
 
+      // client-side validation
+      const errors = []
+      if (!body.name || String(body.name).trim() === '') errors.push('Name is required')
+      if (body.price == null || isNaN(body.price) || Number(body.price) <= 0) errors.push('Price must be a number > 0')
+      if (body.stock_quantity == null || isNaN(body.stock_quantity) || Number(body.stock_quantity) < 0) errors.push('Stock must be 0 or greater')
+      if (errors.length){
+        const resultEl = document.getElementById('result')
+        resultEl.style.display = 'block'
+        resultEl.innerHTML = '<strong>Validation errors:</strong><ul>' + errors.map(e=>'<li>'+escapeHtml(e)+'</li>').join('') + '</ul>'
+        return
+      }
+
       const headers = { 'Content-Type': 'application/json' }
       const token = body.auth_token || null
       if (token) {
@@ -81,7 +111,7 @@
       })
 
       const resultEl = document.getElementById('result')
-      if (res.status === 201){
+        if (res.status === 201){
         const json = await res.json()
         resultEl.style.display = 'block'
         // Render a small HTML summary
@@ -95,6 +125,8 @@
         `
         // Clear the form for convenience
         form.reset()
+          // refresh recent products list
+          loadRecentProducts().catch(()=>{})
       } else {
         // Try to show JSON errors in a readable way
         let bodyText = ''
@@ -111,7 +143,70 @@
 
     loadCategories().catch(err=>console.error(err))
   </script>
+    loadRecentProducts().catch(err=>console.error(err))
   <script>
+  <script>
+    // Load recent products and render them in #recent-list
+    async function loadRecentProducts(){
+      const el = document.getElementById('recent-list')
+      el.textContent = 'Loading...'
+      const res = await fetch('/api/products/')
+      if (!res.ok) {
+        el.textContent = 'Could not load products'
+        return
+      }
+      const body = await res.json()
+      const rows = body.results || []
+      if (!rows.length) {
+        el.innerHTML = '<em>No products yet</em>'
+        return
+      }
+      el.innerHTML = rows.map(p=>{
+        const cat = p.category ? p.category.name : '—'
+        return `<div style="border-bottom:1px solid #eee;padding:.5rem 0">`+
+          `<strong>${escapeHtml(p.name)}</strong> — ${escapeHtml(p.price)} — ${escapeHtml(p.stock_quantity)} in ${escapeHtml(cat)}`+
+          `</div>`
+      }).join('')
+    }
+
+    // login form to obtain JWT token and populate the token field
+    document.getElementById('login-form').addEventListener('submit', async function(e){
+      e.preventDefault()
+      const data = new FormData(e.target)
+      const username = data.get('username')
+      const password = data.get('password')
+      const out = document.getElementById('login-result')
+      out.textContent = ''
+      try{
+        const res = await fetch('/api/auth/token/', {
+          method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username,password})
+        })
+        if (!res.ok){
+          const txt = await res.text()
+          out.textContent = 'Login failed: ' + txt
+          return
+        }
+        const obj = await res.json()
+        const tokenField = document.querySelector('input[name=auth_token]')
+        if (tokenField) tokenField.value = obj.access
+        out.style.color = 'green'
+        out.textContent = 'Token obtained and filled'
+      }catch(err){
+        out.textContent = 'Login error'
+      }
+    })
+
+    // small helper to avoid inserting raw HTML that could contain user content
+    function escapeHtml(str){
+      if (str === null || str === undefined) return ''
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+    }
+  </script>
     // small helper to avoid inserting raw HTML that could contain user content
     function escapeHtml(str){
       if (str === null || str === undefined) return ''
