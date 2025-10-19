@@ -8,7 +8,11 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'dev-secret-key')
 
 DEBUG = os.environ.get('DEBUG', '1') == '1'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',') if os.environ.get('ALLOWED_HOSTS') else ['*']
+ALLOWED_HOSTS = (
+    os.environ.get('ALLOWED_HOSTS', '*').split(',')
+    if os.environ.get('ALLOWED_HOSTS')
+    else ['*']
+)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -71,21 +75,36 @@ except Exception:
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL and dj_database_url:
-    # dj_database_url.parse returns a mapping used by Django; mypy cannot infer its exact type here
-    DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600)  # type: ignore
+    # dj_database_url.parse returns a mapping used by Django
+    # mypy cannot infer its exact type here
+    DATABASES['default'] = dj_database_url.parse(
+        DATABASE_URL, conn_max_age=600
+    )  # type: ignore
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME': (
+            'django.contrib.auth.password_validation.'
+            'UserAttributeSimilarityValidator'
+        ),
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': (
+            'django.contrib.auth.password_validation.'
+            'MinimumLengthValidator'
+        ),
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME': (
+            'django.contrib.auth.password_validation.'
+            'CommonPasswordValidator'
+        ),
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME': (
+            'django.contrib.auth.password_validation.'
+            'NumericPasswordValidator'
+        ),
     },
 ]
 
@@ -111,7 +130,9 @@ try:
     except ValueError:
         middleware.insert(0, 'whitenoise.middleware.WhiteNoiseMiddleware')
     MIDDLEWARE = middleware
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    STATICFILES_STORAGE = (
+        'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    )
 except Exception:
     # WhiteNoise not installed; skip configuring it (development/test)
     pass
@@ -120,12 +141,25 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = True
 
+JWT_AUTH = (
+    'rest_framework_simplejwt.authentication.'
+    'JWTAuthentication'
+)
+SESSION_AUTH = (
+    'rest_framework.authentication.'
+    'SessionAuthentication'
+)
+PAGE_PAGINATION = (
+    'rest_framework.pagination.'
+    'PageNumberPagination'
+)
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        JWT_AUTH,
+        SESSION_AUTH,
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': PAGE_PAGINATION,
     'PAGE_SIZE': 10,
 }
 
@@ -133,3 +167,4 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

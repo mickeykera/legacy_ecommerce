@@ -16,13 +16,18 @@ def main():
     User.objects.create_user(username='debuguser', password='pass')
     cat, _ = Category.objects.get_or_create(name='Electronics')
     prod = Product.objects.create(
-        name='Phone', description='Smartphone', price=199.99, category=cat, stock_quantity=10
+        name='Phone',
+        description='Smartphone',
+        price=199.99,
+        category=cat,
+        stock_quantity=10,
     )
 
     client = Client()
     # obtain token (may depend on your auth urls)
     resp = client.post(
-        '/api/auth/token/', {'username': 'debuguser', 'password': 'pass'}
+        '/api/auth/token/',
+        {'username': 'debuguser', 'password': 'pass'},
     )
     print('token status:', resp.status_code)
     if resp.status_code == 200:

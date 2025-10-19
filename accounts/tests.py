@@ -18,7 +18,11 @@ class AccountsTest(TestCase):
             'email': 'u@example.com',
             'password': 'newpass123',
         }
-        resp = self.client.post(reverse('user-register'), data, format='json')
+        resp = self.client.post(
+            reverse('user-register'),
+            data,
+            format='json',
+        )
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         self.assertTrue(User.objects.filter(username='newuser').exists())
         # registration should return tokens
@@ -27,7 +31,10 @@ class AccountsTest(TestCase):
 
     def test_user_list_requires_admin(self):
         resp = self.client.get(reverse('user-list'))
-        self.assertIn(resp.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+        self.assertIn(
+            resp.status_code,
+            [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN],
+        )
         # login as admin
         self.client.login(username='admin', password='adminpass')
         resp = self.client.get(reverse('user-list'))
@@ -40,7 +47,11 @@ class AccountsTest(TestCase):
             'email': 'v@example.com',
             'password': 'verify123',
         }
-        resp = self.client.post(reverse('user-register'), data, format='json')
+        resp = self.client.post(
+            reverse('user-register'),
+            data,
+            format='json',
+        )
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         # token for verification: generate via serializer util
         from django.contrib.auth.models import User
@@ -48,12 +59,18 @@ class AccountsTest(TestCase):
         from .serializers import RegisterSerializer
         token = RegisterSerializer().generate_verification_token(user)
         # verify
-        resp = self.client.post(reverse('verify-email'), {'token': token}, format='json')
+        resp = self.client.post(
+            reverse('verify-email'),
+            {'token': token},
+            format='json',
+        )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
         # request password reset
         resp = self.client.post(
-            reverse('password-reset'), {'email': 'v@example.com'}, format='json'
+            reverse('password-reset'),
+            {'email': 'v@example.com'},
+            format='json',
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertIn('token', resp.data)

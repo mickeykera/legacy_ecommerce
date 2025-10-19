@@ -43,18 +43,33 @@ class ProductSerializer(serializers.ModelSerializer):
         if not getattr(self, 'partial', False):
             # Full object creation/update requires these fields
             if name is None or (isinstance(name, str) and name.strip() == ''):
-                raise serializers.ValidationError({'name': 'Name is required.'})
+                raise serializers.ValidationError(
+                    {'name': 'Name is required.'}
+                )
             if price is None or price <= 0:
-                raise serializers.ValidationError({'price': 'Price must be greater than 0.'})
+                raise serializers.ValidationError(
+                    {'price': 'Price must be greater than 0.'}
+                )
             if stock is None or stock < 0:
-                raise serializers.ValidationError({'stock_quantity': 'Stock quantity must be 0 or greater.'})
+                raise serializers.ValidationError(
+                    {'stock_quantity': 'Stock quantity must be 0 or greater.'}
+                )
         else:
             # Partial update: only validate provided fields
-            if 'name' in data and (name is None or (isinstance(name, str) and name.strip() == '')):
-                raise serializers.ValidationError({'name': 'Name is required.'})
+            if (
+                'name' in data
+                and (name is None or (isinstance(name, str) and name.strip() == ''))
+            ):
+                raise serializers.ValidationError(
+                    {'name': 'Name is required.'}
+                )
             if 'price' in data and (price is None or price <= 0):
-                raise serializers.ValidationError({'price': 'Price must be greater than 0.'})
+                raise serializers.ValidationError(
+                    {'price': 'Price must be greater than 0.'}
+                )
             if 'stock_quantity' in data and (stock is None or stock < 0):
-                raise serializers.ValidationError({'stock_quantity': 'Stock quantity must be 0 or greater.'})
+                raise serializers.ValidationError(
+                    {'stock_quantity': 'Stock quantity must be 0 or greater.'}
+                )
 
         return data
