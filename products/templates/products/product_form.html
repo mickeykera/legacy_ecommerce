@@ -34,6 +34,9 @@
     <label>Image URL
       <input type="url" name="image_url">
     </label>
+    <label>Auth token (optional)
+      <input type="text" name="auth_token" placeholder="Paste JWT access token to send Authorization header">
+    </label>
     <button type="submit">Create</button>
   </form>
 
@@ -64,9 +67,16 @@
         else body[k] = v
       }
 
+      const headers = { 'Content-Type': 'application/json' }
+      const token = body.auth_token || null
+      if (token) {
+        headers['Authorization'] = 'Bearer ' + token
+        delete body.auth_token
+      }
+
       const res = await fetch('/api/products/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(body),
       })
 
