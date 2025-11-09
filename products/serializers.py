@@ -1,11 +1,13 @@
 from rest_framework import serializers
-from .models import Category, Product
+from .models import Category, Product, ProductImage, Favorite, ProductPriceHistory
+from django.db import transaction
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    product_count = serializers.IntegerField(read_only=True)
     class Meta:
         model = Category
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'product_count']
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -19,6 +21,10 @@ class ProductSerializer(serializers.ModelSerializer):
         )
     )
 
+    owner = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField()
+    image_urls = serializers.ListField(child=serializers.URLField(), write_only=True, required=False)
+
     class Meta:
         model = Product
         fields = [
@@ -30,6 +36,11 @@ class ProductSerializer(serializers.ModelSerializer):
             'category_id',
             'stock_quantity',
             'image_url',
+            'location',
+            'negotiable',
+            'owner',
+            'images',
+            'image_urls',
             'created_at',
         ]
 
@@ -73,3 +84,48 @@ class ProductSerializer(serializers.ModelSerializer):
                 )
 
         return data
+
+    def get_owner(self, obj):
+        if obj.owner:
+            return {'id': obj.owner.id, 'username': getattr(obj.owner, 'username', '')}
+        return None
+
+    def get_images(self, obj):
+        return [{'id': im.id, 'url': im.url} for im in getattr(obj, 'images').all()]
+
+    @transaction.atomic
+    def create(self, validated_data):
+        image_urls = validated_data.pop('image_urls', [])
+        product = super().create(validated_data)
+        for url in image_urls:
+            ProductImage.objects.create(product=product, url=url)
+        return product
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        image_urls = validated_data.pop('image_urls', None)
+        price_before = instance.price
+        product = super().update(instance, validated_data)
+        if image_urls is not None:
+            # replace images with provided list
+            instance.images.all().delete()
+            for url in image_urls:
+                ProductImage.objects.create(product=instance, url=url)
+        if price_before != product.price:
+            ProductPriceHistory.objects.create(product=product, price=product.price)
+        return product
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+    product_id = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), source='product', write_only=True)
+
+    class Meta:
+        model = Favorite
+        fields = ['id', 'product', 'product_id', 'created_at']
+
+
+class ProductPriceHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductPriceHistory
+        fields = ['id', 'price', 'recorded_at']

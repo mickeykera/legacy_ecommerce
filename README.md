@@ -93,3 +93,107 @@ This project includes JWT auth endpoints using djangorestframework-simplejwt:
 Include the access token in the Authorization header for protected endpoints:
 
    Authorization: Bearer <access_token>
+
+Frontend (React + Vite)
+-----------------------
+No-Node Django UI (Recommended if you don't want Node)
+------------------------------------------------------
+
+You can use a built-in storefront page powered by Django templates + vanilla JS. No Node.js is required.
+
+- URL: http://127.0.0.1:8000/api/products/ui/
+- Files:
+   - Template: `products/templates/products/storefront.html`
+   - Styles: `products/static/products/style.css`
+   - JS: `products/static/products/storefront.js`
+
+Features:
+- Search, category filter, price range, pagination
+- Login via JWT token endpoint and basic create-product modal (requires auth)
+- Light/dark theme toggle (persisted in localStorage)
+ - Sorting (newest, price, name) and Clear Filters shortcut
+ - Hash-based deep linking of filter state (shareable URL)
+ - Account registration modal and category creation (authenticated)
+ - Accessible modals and skeleton loading state
+ - Toast notifications for success/error feedback (non-blocking)
+ - List/Grid view toggle (persisted)
+ - Removable active filter chips synced with URL hash
+ - Numeric pagination with first/last and ellipsis
+ - Favorites (local-only) with heart on cards
+ - Create Product modal with live image preview
+
+How to run:
+
+1. Start the Django server:
+
+    D:/ALX/side_project/legacy_ecommerce/.venv/Scripts/python.exe manage.py runserver
+
+2. Open http://127.0.0.1:8000/api/products/ui/
+
+Note: The React-based `frontend/` folder is optional and can be ignored if you prefer a zero-build setup.
+
+Tips
+----
+- Post Ad requires sign-in; use the header button or the Post Ad button (it will prompt login).
+- Favorites are stored locally in your browser (no server storage yet).
+- Use the List view for a classifieds-like layout; the setting is remembered.
+- Remove filters from the chip bar to quickly reset specific criteria.
+
+A lightweight React storefront is scaffolded under `frontend/` with:
+
+- Product grid (search, category & price filters, pagination)
+- Auth modal (login/register via JWT endpoints)
+- Product creation modal (requires auth, uses JWT token)
+- Product detail modal and dedicated route (`/product/:id`)
+- Light/Dark theme toggle (persisted in localStorage)
+- Per-card skeleton loading shimmer while fetching
+- Modern CSS theme (inspired by large e-commerce sites; all styles are original)
+
+Quick start (frontend):
+
+1. Install Node.js (>=18 recommended).
+2. Install dependencies and start dev server (backend at 8000 should be running):
+
+   npm install --prefix frontend
+   npm run dev --prefix frontend
+
+3. Visit http://localhost:5173 (API proxied to http://127.0.0.1:8000).
+
+Routing:
+
+- Home: `/` product grid
+- Product detail route: `/product/<id>` (deep link capable)
+- Clicking a card opens a modal; product title link navigates to route view.
+
+Theme toggle:
+
+- Header button switches between light and dark themes.
+- Styles controlled by CSS variables on `[data-theme]`.
+
+Build production assets:
+
+   npm run build --prefix frontend
+
+This generates a `dist/` folder. You can serve those files via Django by collecting them into static storage or configuring a separate static host.
+
+Design tokens / theming live in `frontend/src/styles.css`. Replace placeholder gradient, colors, and adjust spacing as needed. Product images currently display a neutral placeholder when `image_url` is absent.
+
+Security / Auth Notes
+---------------------
+
+- Tokens are stored in `localStorage` for simplicity; consider using httpOnly cookies or a secure storage mechanism for production.
+- Registration flow creates inactive users; flows to verify/activate can be integrated into the UI later.
+- CSRF protection is not required for pure JWT JSON POSTs but ensure appropriate safeguards if adding session-authenticated forms.
+
+Extending Further
+-----------------
+
+- Infinite scroll (replace pagination buttons) using IntersectionObserver.
+- Category management UI (create/edit/delete categories for staff).
+- Optimistic updates for product creation and stock edits.
+- Cart and checkout domain models + UI.
+- Accessibility pass (focus trapping in modals, ARIA roles for skeletons).
+ - Toast stacking limit & persistence
+ - Replace alerts everywhere with toasts (completed)
+
+All brand references are illustrative; replace names, gradients, and marketing copy with your own to avoid trademark issues.
